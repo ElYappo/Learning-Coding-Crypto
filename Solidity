@@ -1,1 +1,61 @@
 
+Very simple token sale. Questions: What is this code exactly doing? Results of different changes?
+ 
+ // To specify what version of compiler this code will compile with
+pragma solidity ^0.4.11;
+
+contract tokensale {
+
+  // Declaring the maximum number of tokens available for sale.
+  uint public maxTokens = 250001;
+
+  // The number of tokens you can buy for one wei (Solidity converts all unitless values from ethers to wei).
+  // We will keep the default currency to be wei. It will get clearer.
+  uint public tokenSwap = 10;
+
+  // This variable, initially set to zero,  stores the number of tokens that have been bought, i.e it will
+  // get incremented each time someone buys tokens.
+  uint public supply = 0;
+
+  // mapping is an equivalent to associative array. We store token balances corresponding
+  // to each address that buys tokens in this mapping.
+  mapping (address => uint) balance;
+
+
+  // A modifier checks if a condition is met before executing a function.
+  // This  modifer checks if there are tokens available before the buyTokens function is called.
+  modifier isTokenAvailable () {
+    require (msg.value*tokenSwap + supply <= maxTokens);     // require checks the condition and the function that
+    _;                                                    	 // follows, denoted by the '_', is only run if the condition
+  }							                                             // is satisfied.
+
+
+  // A function to check the ether balance of any address.
+  function checkBalance (address addr) external returns (uint) {
+    return addr.balance;       // The address.balance call returns the ether balance of the given address.
+  }
+
+
+  // To check the token balance of any address. The external keyword allows the function
+  // to be called from outside the contract. If no keyword is specified, all functions are external
+  // by default..
+  function balanceOf (address tokenHolder) external constant returns (uint) {
+    return balance[tokenHolder];
+  }
+
+  // A function to buy tokens accesible by any address
+  // The payable keyword allows the contract to accept ethers
+  // from the transactor. The ethers to be deposited is entered as msg.value
+  // (which will get clearer when we will call the functions in browser-solidity)
+  // and the corresponding tokens are stored in balance[msg.sender] mapping.
+  // underflows and overflows are security consideration which are
+  // not checked in the process. But lets not worry about them for now.
+
+  function buyTokens () external
+  payable
+  isTokenAvailable {
+    uint tokensAmount = msg.value * tokenSwap;    // At this point, msg.value is in wei.
+    balance [msg.sender] += tokensAmount;
+    supply += tokensAmount;
+  }
+}
